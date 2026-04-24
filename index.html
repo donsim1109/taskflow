@@ -1,166 +1,627 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TaskFlow — AI Task Manager</title>
-  <link rel="stylesheet" href="src/style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TaskFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080b14;--bg1:#0d1120;--bg2:#111827;--bg3:#1a2235;--bg4:#202d42;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--border3:rgba(255,255,255,0.2);
+  --text:#f1f5fd;--text2:#8b98b8;--text3:#4a5568;
+  --a:#6ee7ff;--a2:#3b82f6;--a3:rgba(110,231,255,0.08);--a4:rgba(110,231,255,0.15);
+  --green:#4ade80;--red:#f87171;--orange:#fb923c;--purple:#a78bfa;--yellow:#fbbf24;
+  --radius:12px;--radius2:18px;
+  --font:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html{font-size:15px}
+body{
+  font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%,rgba(59,130,246,.14) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 30% at 90% 80%,rgba(110,231,255,.05) 0%,transparent 50%);
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+  opacity:.5;
+}
+.app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 28px;background:rgba(8,11,20,.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;
+}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{
+  width:36px;height:36px;background:linear-gradient(135deg,var(--a2),var(--a));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;box-shadow:0 0 24px rgba(59,130,246,.4);
+}
+.logo-name{
+  font-size:1.15rem;font-weight:700;letter-spacing:-.03em;
+  background:linear-gradient(135deg,var(--text) 30%,var(--a));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.logo-badge{
+  font-size:.6rem;font-family:var(--mono);color:var(--a);
+  background:rgba(110,231,255,.07);border:1px solid rgba(110,231,255,.2);
+  padding:2px 7px;border-radius:100px;letter-spacing:.1em;text-transform:uppercase;
+}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.sync-dot{font-size:.72rem;font-family:var(--mono)}
+.sync-ok{color:#4ade80}.sync-err{color:var(--red)}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;padding:8px 18px;
+  border-radius:10px;border:none;font-family:var(--font);font-size:.82rem;font-weight:600;
+  cursor:pointer;transition:all .18s ease;letter-spacing:.01em;white-space:nowrap;
+}
+.btn-p{
+  background:linear-gradient(135deg,var(--a2),var(--a));color:#08111f;
+  box-shadow:0 4px 16px rgba(59,130,246,.35);
+}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(59,130,246,.5)}
+.btn-g{background:rgba(255,255,255,.04);color:var(--text2);border:1px solid var(--border2)}
+.btn-g:hover{background:rgba(255,255,255,.08);color:var(--text);border-color:var(--border3)}
+.btn-sm{padding:6px 13px;font-size:.76rem}
+.btn svg{width:14px;height:14px;flex-shrink:0}
+main{display:grid;grid-template-columns:400px 1fr;flex:1}
+.panel{padding:28px;overflow-y:auto}
+.panel-l{border-right:1px solid var(--border);background:rgba(13,17,32,.5)}
+.sec-label{
+  font-size:.65rem;font-family:var(--mono);font-weight:500;
+  color:var(--text3);letter-spacing:.12em;text-transform:uppercase;
+  margin-bottom:16px;display:flex;align-items:center;gap:8px;
+}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.ptitle{font-size:1.5rem;font-weight:700;letter-spacing:-.03em;margin-bottom:6px}
+.psub{font-size:.82rem;color:var(--text2);line-height:1.5;margin-bottom:24px}
+.tabs{
+  display:flex;gap:4px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:4px;margin-bottom:20px;
+}
+.tab{
+  flex:1;padding:8px;border:none;background:transparent;
+  color:var(--text2);font-family:var(--font);font-size:.8rem;font-weight:600;
+  cursor:pointer;border-radius:9px;transition:all .18s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.tab.active{background:var(--bg4);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.3);border:1px solid var(--border2)}
+.tab svg{width:13px;height:13px}
+.txwrap{position:relative;margin-bottom:14px}
+.txtarea{
+  width:100%;min-height:180px;background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--radius2);color:var(--text);font-family:var(--mono);
+  font-size:.78rem;line-height:1.75;padding:16px;resize:vertical;outline:none;
+  transition:border-color .18s,box-shadow .18s;
+}
+.txtarea:focus{border-color:rgba(110,231,255,.3);box-shadow:0 0 0 3px rgba(110,231,255,.05)}
+.txtarea::placeholder{color:var(--text3)}
+.cc{position:absolute;bottom:10px;right:12px;font-size:.65rem;font-family:var(--mono);color:var(--text3)}
+.acts{display:flex;gap:8px;margin-bottom:16px}
+.acts .btn-p{flex:1}
+.exs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.exlabel{font-size:.68rem;color:var(--text3);font-family:var(--mono)}
+.chip{
+  padding:4px 10px;font-size:.7rem;font-family:var(--mono);
+  background:transparent;border:1px dashed var(--border2);
+  color:var(--text2);border-radius:100px;cursor:pointer;transition:all .15s;
+}
+.chip:hover{border-color:rgba(110,231,255,.3);color:var(--a);background:var(--a3)}
+.divider{height:1px;background:var(--border);margin:24px 0}
+.vwrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+.vstage{
+  width:100%;height:160px;background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--radius2);display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.vstage::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 50%,rgba(110,231,255,.03) 0%,transparent 70%);
+}
+.rings{position:absolute;display:flex;align-items:center;justify-content:center}
+.ring{position:absolute;border-radius:50%;border:1px solid rgba(110,231,255,.15);opacity:0}
+.ring:nth-child(1){width:70px;height:70px}
+.ring:nth-child(2){width:110px;height:110px}
+.ring:nth-child(3){width:150px;height:150px}
+.recording .ring{opacity:1;animation:ripple 2s ease-out infinite}
+.recording .ring:nth-child(2){animation-delay:.4s}
+.recording .ring:nth-child(3){animation-delay:.8s}
+@keyframes ripple{
+  0%{transform:scale(.8);opacity:.7;border-color:rgba(110,231,255,.4)}
+  100%{transform:scale(1.3);opacity:0;border-color:rgba(110,231,255,0)}
+}
+.micbtn{
+  width:60px;height:60px;border-radius:50%;background:var(--bg3);
+  border:1.5px solid var(--border2);font-size:1.4rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;z-index:1;position:relative;
+}
+.micbtn:hover{border-color:rgba(110,231,255,.3);background:var(--bg4)}
+.micbtn.on{
+  border-color:var(--a);background:rgba(110,231,255,.08);
+  animation:mpulse 1.5s ease-in-out infinite;
+}
+@keyframes mpulse{0%,100%{box-shadow:0 0 20px rgba(110,231,255,.2)}50%{box-shadow:0 0 40px rgba(110,231,255,.45)}}
+.vstatus{font-size:.78rem;color:var(--text2);text-align:center}
+.vtranscript{
+  width:100%;min-height:60px;max-height:120px;overflow-y:auto;
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:12px;font-size:.78rem;font-family:var(--mono);line-height:1.7;color:var(--text);
+}
+.vtranscript:empty::before{content:'Transcript will appear here…';color:var(--text3)}
+.pbar{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius);
+  background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(110,231,255,.06));
+  border:1px solid rgba(110,231,255,.15);font-size:.78rem;color:var(--a);margin-top:14px;
+}
+.spinner{
+  width:15px;height:15px;border-radius:50%;
+  border:2px solid rgba(110,231,255,.2);border-top-color:var(--a);
+  animation:spin .7s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cfg-card{margin-top:24px;border:1px solid var(--border);border-radius:var(--radius2);overflow:hidden}
+.cfg-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 16px;background:var(--bg2);font-size:.78rem;color:var(--text2);
+  cursor:pointer;transition:background .15s;user-select:none;
+}
+.cfg-head:hover{background:var(--bg3);color:var(--text)}
+.cfg-head svg{transition:transform .2s;flex-shrink:0}
+.cfg-head.open svg{transform:rotate(180deg)}
+.cfg-body{
+  padding:16px;background:var(--bg1);border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:12px;
+}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:.68rem;color:var(--text2);font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.field input{
+  background:var(--bg3);border:1px solid var(--border2);border-radius:9px;
+  color:var(--text);font-family:var(--mono);font-size:.77rem;padding:9px 12px;outline:none;
+  transition:border-color .15s;
+}
+.field input:focus{border-color:rgba(110,231,255,.3)}
+.field input::placeholder{color:var(--text3)}
+.cfg-note{font-size:.67rem;color:var(--text3);line-height:1.55}
+.rhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.tmeta{display:flex;align-items:center;gap:12px}
+.tmeta h2{font-size:1.4rem;font-weight:700;letter-spacing:-.03em;margin:0}
+.cbadge{
+  padding:3px 10px;border-radius:100px;background:var(--bg3);border:1px solid var(--border2);
+  font-size:.7rem;font-family:var(--mono);color:var(--text2);font-weight:500;
+}
+.twrap{border:1px solid var(--border);border-radius:var(--radius2);overflow:hidden;background:var(--bg1)}
+.ttable{width:100%;border-collapse:collapse;font-size:.8rem}
+.ttable thead{background:var(--bg2);border-bottom:1px solid var(--border)}
+.ttable th{
+  padding:11px 14px;text-align:left;
+  font-family:var(--mono);font-size:.65rem;font-weight:500;
+  color:var(--text3);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;
+}
+.ttable td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+.ttable tr:last-child td{border-bottom:none}
+.ttable tbody tr{transition:background .12s}
+.ttable tbody tr:hover{background:rgba(255,255,255,.015)}
+.st{
+  display:inline-flex;align-items:center;gap:5px;padding:4px 10px;
+  border-radius:100px;font-size:.68rem;font-weight:600;font-family:var(--mono);
+  cursor:pointer;border:none;white-space:nowrap;transition:all .15s;
+}
+.st-todo{background:rgba(75,85,99,.35);color:#9ca3af;border:1px solid rgba(75,85,99,.5)}
+.st-doing{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3)}
+.st-done{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
+.st:hover{filter:brightness(1.2)}
+.pr{
+  display:inline-flex;align-items:center;gap:4px;padding:3px 9px;
+  border-radius:6px;font-size:.67rem;font-family:var(--mono);font-weight:500;letter-spacing:.04em;
+}
+.pr-critical{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25)}
+.pr-high{background:rgba(251,146,60,.12);color:var(--orange);border:1px solid rgba(251,146,60,.25)}
+.pr-medium{background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.2)}
+.pr-low{background:rgba(75,85,99,.2);color:var(--text3);border:1px solid var(--border)}
+.cat{
+  padding:3px 9px;border-radius:6px;font-size:.67rem;font-family:var(--mono);
+  background:rgba(167,139,250,.1);color:var(--purple);border:1px solid rgba(167,139,250,.2);
+}
+.ec{outline:none;border-radius:5px;padding:2px 5px;min-width:60px;transition:background .15s;cursor:text}
+.ec:focus{background:var(--bg4);box-shadow:0 0 0 1.5px rgba(110,231,255,.25)}
+.ra{display:flex;gap:5px;align-items:center}
+.rb{
+  width:27px;height:27px;border-radius:7px;border:1px solid var(--border);
+  background:transparent;color:var(--text3);cursor:pointer;font-size:.72rem;
+  display:flex;align-items:center;justify-content:center;transition:all .14s;
+}
+.rb:hover{border-color:var(--border2);color:var(--text);background:var(--bg3)}
+.rb.del:hover{border-color:rgba(248,113,113,.35);color:var(--red);background:rgba(248,113,113,.08)}
+.empty-td{padding:64px 20px !important}
+.empty-state{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--text3)}
+.eico{
+  width:52px;height:52px;border-radius:14px;background:var(--bg2);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.4rem;
+}
+.empty-state p{font-size:.8rem}
+.toast{
+  position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:12px;
+  font-size:.78rem;font-family:var(--font);font-weight:500;
+  opacity:0;transform:translateY(10px) scale(.97);transition:all .22s ease;
+  pointer-events:none;z-index:999;max-width:300px;line-height:1.4;backdrop-filter:blur(20px);
+}
+.toast.show{opacity:1;transform:translateY(0) scale(1)}
+.tok{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.25);color:#4ade80}
+.terr{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red)}
+.tinf{background:var(--a3);border:1px solid rgba(110,231,255,.2);color:var(--a)}
+.hidden{display:none!important}
+@keyframes rowIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.trow{animation:rowIn .22s ease forwards}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:10px}
+@media(max-width:860px){
+  main{grid-template-columns:1fr}
+  .panel-l{border-right:none;border-bottom:1px solid var(--border)}
+}
+</style>
 </head>
 <body>
-  <div id="app">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-left">
-        <div class="logo">
-          <span class="logo-icon">⬡</span>
-          <span class="logo-text">TaskFlow</span>
-        </div>
-        <span class="header-tag">AI-Powered</span>
+<div class="app">
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">⬡</div>
+    <span class="logo-name">TaskFlow</span>
+    <span class="logo-badge">AI</span>
+  </div>
+  <div class="hdr-r">
+    <span class="sync-dot" id="syncDot"></span>
+    <button class="btn btn-g btn-sm" id="exportBtn">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v8M5 7l3 3 3-3M3 13h10" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      CSV
+    </button>
+    <button class="btn btn-p btn-sm" id="syncBtn">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8a6 6 0 1 1 1.5 4" stroke-linecap="round"/><path d="M2 12V8h4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Sync to Sheets
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="panel panel-l">
+    <div class="sec-label">Input</div>
+    <h2 class="ptitle">Capture Tasks</h2>
+    <p class="psub">Speak or type freely — AI extracts structure automatically</p>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="text">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 7h6M5 10h4" stroke-linecap="round"/></svg>
+        Type
+      </button>
+      <button class="tab" data-tab="voice">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5.5" y="1" width="5" height="8" rx="2.5"/><path d="M2 8a6 6 0 0 0 12 0M8 14v-2" stroke-linecap="round"/></svg>
+        Speak
+      </button>
+    </div>
+
+    <div id="textTab">
+      <div class="txwrap">
+        <textarea id="taskInput" class="txtarea" placeholder="e.g. Call Maria tomorrow about the budget proposal, high priority. Fix login bug ASAP, assign to Sara. Schedule design review by Friday." oninput="document.getElementById('cc').textContent=this.value.length"></textarea>
+        <span class="cc" id="cc">0</span>
       </div>
-      <div class="header-right">
-        <button class="btn btn-ghost" id="syncBtn">
-          <span class="btn-icon">↑</span> Sync to Sheets
+      <div class="acts">
+        <button class="btn btn-p" id="parseBtn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4h8M2 8h5M2 12h10" stroke-linecap="round"/><path d="M12 7l2 2-2 2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Parse Tasks
         </button>
-        <div class="sync-status" id="syncStatus"></div>
+        <button class="btn btn-g" id="clearBtn">Clear</button>
       </div>
-    </header>
+      <div class="exs">
+        <span class="exlabel">Try:</span>
+        <button class="chip" data-text="Call the client on Monday about the proposal, high priority, assign to Maria">Client call</button>
+        <button class="chip" data-text="Fix the payment bug ASAP, critical. Update docs by end of week. Schedule team meeting next Tuesday, assign to Alex.">Multi-task</button>
+      </div>
+    </div>
 
-    <!-- Main layout -->
-    <main class="main">
-      <!-- Left panel: input -->
-      <section class="panel panel-input">
-        <div class="panel-header">
-          <h2>Capture Tasks</h2>
-          <p>Speak or type your tasks — AI will structure them automatically</p>
+    <div id="voiceTab" class="hidden">
+      <div class="vwrap">
+        <div class="vstage">
+          <div class="rings" id="rings">
+            <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+          </div>
+          <button class="micbtn" id="micBtn">🎙</button>
         </div>
+        <p class="vstatus" id="vStatus">Click the mic to start recording</p>
+        <div class="vtranscript" id="vTranscript"></div>
+        <div class="acts hidden" id="vActs">
+          <button class="btn btn-p" id="parseVBtn">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4h8M2 8h5M2 12h10" stroke-linecap="round"/><path d="M12 7l2 2-2 2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Parse Tasks
+          </button>
+          <button class="btn btn-g" id="clearVBtn">Clear</button>
+        </div>
+      </div>
+    </div>
 
-        <!-- Mode tabs -->
-        <div class="mode-tabs">
-          <button class="tab active" data-tab="text">✎ Type</button>
-          <button class="tab" data-tab="voice">🎙 Speak</button>
-        </div>
+    <div class="pbar hidden" id="pbar">
+      <div class="spinner"></div>
+      <span>AI is extracting your tasks…</span>
+    </div>
 
-        <!-- Text input -->
-        <div class="input-area" id="textTab">
-          <textarea
-            id="taskInput"
-            class="task-textarea"
-            placeholder="e.g. Call John tomorrow about the budget proposal, high priority. Review the marketing deck by Friday. Fix login bug, assign to Sara, urgent."
-          ></textarea>
-          <div class="input-actions">
-            <button class="btn btn-primary" id="parseBtn">
-              <span>Parse Tasks</span>
-              <span class="btn-arrow">→</span>
-            </button>
-            <button class="btn btn-ghost" id="clearInputBtn">Clear</button>
-          </div>
-          <div class="examples">
-            <span class="examples-label">Try:</span>
-            <button class="example-chip" data-text="Call the client on Monday about the proposal, high priority, assign to Maria">Call client example</button>
-            <button class="example-chip" data-text="Fix the payment bug ASAP, critical priority. Update docs by end of week. Schedule team meeting for next Tuesday">Multi-task example</button>
-          </div>
-        </div>
+    <div class="divider"></div>
 
-        <!-- Voice input -->
-        <div class="input-area hidden" id="voiceTab">
-          <div class="voice-visualizer" id="voiceVisualizer">
-            <div class="voice-rings">
-              <div class="ring ring-1"></div>
-              <div class="ring ring-2"></div>
-              <div class="ring ring-3"></div>
-            </div>
-            <button class="voice-btn" id="voiceBtn">
-              <span class="voice-icon">🎙</span>
-            </button>
-          </div>
-          <div class="voice-status" id="voiceStatus">Click the mic to start recording</div>
-          <div class="voice-transcript" id="voiceTranscript"></div>
-          <div class="input-actions" id="voiceActions" style="display:none;">
-            <button class="btn btn-primary" id="parseVoiceBtn">
-              <span>Parse Tasks</span>
-              <span class="btn-arrow">→</span>
-            </button>
-            <button class="btn btn-ghost" id="clearVoiceBtn">Clear</button>
-          </div>
+    <div class="cfg-card">
+      <div class="cfg-head" id="cfgHead">
+        <span style="display:flex;align-items:center;gap:8px">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke-linecap="round"/></svg>
+          API Configuration
+        </span>
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="cfg-body hidden" id="cfgBody">
+        <div class="field">
+          <label>Spreadsheet ID</label>
+          <input type="text" id="sheetId" placeholder="1MA6djb09zkWRaEwLrMDJJbbh48jAKR0jsThn-pgxqg0"/>
         </div>
-
-        <!-- Parsing status -->
-        <div class="parsing-status hidden" id="parsingStatus">
-          <div class="spinner"></div>
-          <span>AI is parsing your tasks…</span>
+        <div class="field">
+          <label>Google API Key</label>
+          <input type="password" id="gKey" placeholder="AIzaSy…"/>
         </div>
-      </section>
-
-      <!-- Right panel: table -->
-      <section class="panel panel-table">
-        <div class="panel-header">
-          <div>
-            <h2>Task Board</h2>
-            <p id="taskCount">0 tasks</p>
-          </div>
-          <div class="table-actions">
-            <button class="btn btn-ghost btn-sm" id="exportCsvBtn">↓ CSV</button>
-            <button class="btn btn-ghost btn-sm" id="clearAllBtn">✕ Clear All</button>
-          </div>
+        <div class="field">
+          <label>Anthropic API Key</label>
+          <input type="password" id="aKey" placeholder="sk-ant-…"/>
         </div>
-
-        <!-- Table -->
-        <div class="table-wrap">
-          <table class="task-table" id="taskTable">
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Task</th>
-                <th>Assignee</th>
-                <th>Due Date</th>
-                <th>Priority</th>
-                <th>Category</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="taskBody">
-              <tr class="empty-row" id="emptyRow">
-                <td colspan="7">
-                  <div class="empty-state">
-                    <div class="empty-icon">⬡</div>
-                    <p>No tasks yet. Capture some above!</p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Sheets config -->
-        <div class="sheets-config" id="sheetsConfig">
-          <div class="config-header" id="configToggle">
-            <span>⚙ Google Sheets Integration</span>
-            <span class="config-arrow">▾</span>
-          </div>
-          <div class="config-body hidden" id="configBody">
-            <div class="field-group">
-              <label>Spreadsheet ID</label>
-              <input type="text" id="sheetId" class="field-input" placeholder="1MA6djb09zkWRaEwLrMDJJbbh48jAKR0jsThn-pgxqg0" value="1MA6djb09zkWRaEwLrMDJJbbh48jAKR0jsThn-pgxqg0" />
-            </div>
-            <div class="field-group">
-              <label>Google API Key</label>
-              <input type="password" id="apiKey" class="field-input" placeholder="Your Google Sheets API key" />
-            </div>
-            <div class="field-group">
-              <label>Anthropic API Key</label>
-              <input type="password" id="anthropicKey" class="field-input" placeholder="sk-ant-..." />
-            </div>
-            <p class="config-note">Keys are stored locally in your browser and never sent to any server other than the respective APIs.</p>
-          </div>
-        </div>
-      </section>
-    </main>
+        <p class="cfg-note">Keys are stored in your browser's localStorage only — never sent to any third-party server.</p>
+      </div>
+    </div>
   </div>
 
-  <div class="toast" id="toast"></div>
+  <div class="panel">
+    <div class="sec-label">Tasks</div>
+    <div class="rhead">
+      <div class="tmeta">
+        <h2>Task Board</h2>
+        <span class="cbadge" id="tCount">0 tasks</span>
+      </div>
+      <button class="btn btn-g btn-sm" id="clearAllBtn">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><path d="M3 4h10M5 4V2h6v2M6 7v5M10 7v5M4 4l.5 9h7L12 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Clear All
+      </button>
+    </div>
+    <div class="twrap">
+      <table class="ttable" id="ttable">
+        <thead>
+          <tr>
+            <th>Status</th><th>Task</th><th>Assignee</th>
+            <th>Due</th><th>Priority</th><th>Category</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="tBody">
+          <tr id="emptyRow">
+            <td colspan="7" class="empty-td">
+              <div class="empty-state">
+                <div class="eico">📋</div>
+                <p>No tasks yet — add some on the left</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</div>
+<div class="toast" id="toast"></div>
 
-  <script src="src/app.js"></script>
+<script>
+const DEFAULT_SID='1MA6djb09zkWRaEwLrMDJJbbh48jAKR0jsThn-pgxqg0';
+let tasks=[],rec=null,isRec=false,voiceText='';
+const g=id=>document.getElementById(id);
+const taskInput=g('taskInput'),parseBtn=g('parseBtn'),clearBtn=g('clearBtn');
+const parseVBtn=g('parseVBtn'),clearVBtn=g('clearVBtn'),micBtn=g('micBtn');
+const rings=g('rings'),vStatus=g('vStatus'),vTranscript=g('vTranscript'),vActs=g('vActs');
+const pbar=g('pbar'),tBody=g('tBody'),emptyRow=g('emptyRow'),tCount=g('tCount');
+const syncBtn=g('syncBtn'),syncDot=g('syncDot'),exportBtn=g('exportBtn'),clearAllBtn=g('clearAllBtn');
+const cfgHead=g('cfgHead'),cfgBody=g('cfgBody'),sheetId=g('sheetId'),gKey=g('gKey'),aKey=g('aKey');
+const toast=g('toast');
+
+(function init(){
+  sheetId.value=localStorage.getItem('tf_sid')||DEFAULT_SID;
+  gKey.value=localStorage.getItem('tf_gk')||'';
+  aKey.value=localStorage.getItem('tf_ak')||'';
+  try{const s=localStorage.getItem('tf_tasks');if(s){tasks=JSON.parse(s);renderTable();}}catch(e){}
+})();
+[sheetId,gKey,aKey].forEach(el=>el.addEventListener('change',()=>{
+  localStorage.setItem('tf_sid',sheetId.value);
+  localStorage.setItem('tf_gk',gKey.value);
+  localStorage.setItem('tf_ak',aKey.value);
+}));
+
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  g('textTab').classList.toggle('hidden',t.dataset.tab!=='text');
+  g('voiceTab').classList.toggle('hidden',t.dataset.tab!=='voice');
+}));
+
+cfgHead.addEventListener('click',()=>{cfgBody.classList.toggle('hidden');cfgHead.classList.toggle('open');});
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{taskInput.value=c.dataset.text;g('cc').textContent=taskInput.value.length;taskInput.focus();}));
+parseBtn.addEventListener('click',()=>{const t=taskInput.value.trim();if(!t){toast2('Enter some text first','inf');return;}parseTasks(t);});
+clearBtn.addEventListener('click',()=>{taskInput.value='';g('cc').textContent=0;});
+parseVBtn.addEventListener('click',()=>{if(!voiceText.trim()){toast2('No voice input yet','inf');return;}parseTasks(voiceText);});
+clearVBtn.addEventListener('click',()=>{voiceText='';vTranscript.textContent='';vActs.classList.add('hidden');});
+
+(function initVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){vStatus.textContent='Not supported — use Chrome or Edge';micBtn.disabled=true;return;}
+  rec=new SR();rec.continuous=true;rec.interimResults=true;rec.lang='en-US';
+  rec.onresult=e=>{
+    let f='',i='';
+    for(let x=e.resultIndex;x<e.results.length;x++){
+      if(e.results[x].isFinal)f+=e.results[x][0].transcript;else i+=e.results[x][0].transcript;
+    }
+    if(f)voiceText+=f+' ';
+    vTranscript.textContent=voiceText+i;
+  };
+  rec.onerror=ev=>{toast2('Mic: '+ev.error,'err');stopRec();};
+  rec.onend=()=>{if(isRec)rec.start();};
+})();
+
+micBtn.addEventListener('click',()=>isRec?stopRec():startRec());
+function startRec(){if(!rec){toast2('Not available','err');return;}isRec=true;micBtn.classList.add('on');rings.classList.add('recording');vStatus.textContent='Listening… click to stop';rec.start();}
+function stopRec(){isRec=false;micBtn.classList.remove('on');rings.classList.remove('recording');vStatus.textContent='Recording stopped';try{rec.stop();}catch(e){}if(voiceText.trim())vActs.classList.remove('hidden');}
+
+async function parseTasks(raw){
+  pbar.classList.remove('hidden');parseBtn.disabled=true;parseVBtn.disabled=true;
+  try{
+    const key=aKey.value.trim();
+    const parsed=key?await aiParse(raw,key):regexParse(raw);
+    if(!key)toast2('No Anthropic key — using basic parser','inf');
+    addTasks(parsed);saveTasks();
+  }catch(e){console.error(e);toast2('Error: '+e.message,'err');}
+  finally{pbar.classList.add('hidden');parseBtn.disabled=false;parseVBtn.disabled=false;}
+}
+
+async function aiParse(text,key){
+  const today=new Date().toISOString().slice(0,10);
+  const sys=`Extract ALL tasks from the text. Return ONLY a JSON array, each item:
+{"title":"string (max 80 chars)","assignee":"string or empty","dueDate":"YYYY-MM-DD or empty","priority":"critical|high|medium|low","category":"Engineering|Design|Meeting|Marketing|Review|Finance|Admin|Documentation|General","status":"todo"}
+Today: ${today}. Infer dates: tomorrow=+1d, friday/end of week=next Friday, next monday=next Monday.
+Priority: ASAP/urgent/critical→critical, important/high→high, default→medium. Return ONLY the JSON array.`;
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,system:sys,messages:[{role:'user',content:text}]})
+  });
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'HTTP '+r.status);}
+  const d=await r.json();
+  return JSON.parse((d.content?.[0]?.text||'[]').replace(/```json|```/g,'').trim());
+}
+
+function regexParse(text){
+  return text.split(/(?<=[.!?])\s+|\n+/).map(s=>s.trim()).filter(s=>s.length>5).map(s=>{
+    let priority='medium';
+    if(/critical|asap|urgent/i.test(s))priority='critical';
+    else if(/high priority|important/i.test(s))priority='high';
+    else if(/low priority|eventually/i.test(s))priority='low';
+    let assignee='';
+    const am=s.match(/assign(?:ed)?\s+to\s+([A-Z][a-z]+)/i)||s.match(/\bfor\s+([A-Z][a-z]+)\b/);
+    if(am)assignee=am[1];
+    let dueDate='';
+    const today=new Date();
+    const d=n=>{const x=new Date(today);x.setDate(x.getDate()+n);return x.toISOString().slice(0,10);};
+    if(/tomorrow/i.test(s))dueDate=d(1);
+    else if(/friday|end of week/i.test(s))dueDate=d((5-today.getDay()+7)%7||7);
+    else if(/next monday/i.test(s))dueDate=d((1-today.getDay()+7)%7||7);
+    let category='General';
+    if(/bug|fix|deploy|code|error|crash|login/i.test(s))category='Engineering';
+    else if(/design|ui|ux|mockup|figma/i.test(s))category='Design';
+    else if(/meeting|call|sync|standup/i.test(s))category='Meeting';
+    else if(/review|feedback|approve/i.test(s))category='Review';
+    else if(/marketing|campaign|content/i.test(s))category='Marketing';
+    else if(/doc|report|write|readme/i.test(s))category='Documentation';
+    else if(/payment|invoice|budget|finance/i.test(s))category='Finance';
+    const title=s.replace(/assign(?:ed)?\s+to\s+\w+/gi,'').replace(/,?\s*(high|low|medium|critical)\s+priority/gi,'').replace(/\b(ASAP|urgent|immediately)\b/gi,'').trim().replace(/[.,!]+$/,'').trim();
+    return{title,assignee,dueDate,priority,category,status:'todo'};
+  }).filter(t=>t.title.length>3);
+}
+
+function addTasks(list){
+  list.forEach(t=>tasks.push({id:Date.now()+Math.random(),...t}));
+  renderTable();
+  toast2('✓ Added '+list.length+' task'+(list.length!==1?'s':''),'tok');
+}
+
+function renderTable(){
+  tCount.textContent=tasks.length+' task'+(tasks.length!==1?'s':'');
+  const ex={};
+  document.querySelectorAll('.trow').forEach(r=>{ex[r.dataset.id]=r;});
+  const present=new Set();
+  tasks.forEach(t=>{
+    present.add(String(t.id));
+    if(!ex[t.id])tBody.insertBefore(buildRow(t),emptyRow);
+  });
+  Object.keys(ex).forEach(id=>{if(!present.has(id))ex[id].remove();});
+  emptyRow.classList.toggle('hidden',tasks.length>0);
+}
+
+function buildRow(task){
+  const tr=document.createElement('tr');
+  tr.className='trow';tr.dataset.id=task.id;
+  const sl={todo:'● To Do',doing:'◑ Doing',done:'✓ Done'};
+  tr.innerHTML=`
+    <td><button class="st st-${task.status}" onclick="cycleStatus('${task.id}')">${sl[task.status]}</button></td>
+    <td><span class="ec" contenteditable data-id="${task.id}" data-f="title">${esc(task.title)}</span></td>
+    <td><span class="ec" contenteditable data-id="${task.id}" data-f="assignee">${esc(task.assignee)}</span></td>
+    <td><span class="ec" contenteditable data-id="${task.id}" data-f="dueDate">${esc(task.dueDate)}</span></td>
+    <td><span class="pr pr-${task.priority}">${prDot(task.priority)} ${cap(task.priority)}</span></td>
+    <td><span class="cat ec" contenteditable data-id="${task.id}" data-f="category">${esc(task.category)}</span></td>
+    <td><div class="ra"><button class="rb del" onclick="delTask('${task.id}')">✕</button></div></td>`;
+  tr.querySelectorAll('.ec').forEach(c=>{
+    c.addEventListener('blur',()=>{const t=tasks.find(x=>String(x.id)===String(c.dataset.id));if(t){t[c.dataset.f]=c.textContent.trim();saveTasks();}});
+    c.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();c.blur();}});
+  });
+  return tr;
+}
+
+function cycleStatus(id){
+  const t=tasks.find(x=>String(x.id)===String(id));if(!t)return;
+  t.status={todo:'doing',doing:'done',done:'todo'}[t.status];saveTasks();
+  const btn=document.querySelector(`.st[onclick="cycleStatus('${id}')"]`);
+  if(btn){btn.className='st st-'+t.status;btn.textContent={todo:'● To Do',doing:'◑ Doing',done:'✓ Done'}[t.status];}
+}
+
+function delTask(id){
+  tasks=tasks.filter(x=>String(x.id)!==String(id));
+  document.querySelector('.trow[data-id="'+id+'"]')?.remove();
+  saveTasks();renderTable();toast2('Task removed','inf');
+}
+
+clearAllBtn.addEventListener('click',()=>{
+  if(!tasks.length)return;
+  if(confirm('Clear all tasks?')){tasks=[];saveTasks();renderTable();toast2('All cleared','inf');}
+});
+
+syncBtn.addEventListener('click',async()=>{
+  const sid=sheetId.value.trim(),key=gKey.value.trim();
+  if(!sid){toast2('Add Spreadsheet ID in config','err');return;}
+  if(!key){toast2('Add Google API Key in config','err');return;}
+  if(!tasks.length){toast2('No tasks to sync','inf');return;}
+  syncBtn.disabled=true;syncDot.textContent='Syncing…';syncDot.className='sync-dot';
+  try{
+    const hdr=['Status','Title','Assignee','Due Date','Priority','Category'];
+    const rows=tasks.map(t=>[cap(t.status),t.title,t.assignee,t.dueDate,cap(t.priority),t.category]);
+    const r=await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+sid+'/values/A1?valueInputOption=RAW&key='+key,{
+      method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({range:'A1',majorDimension:'ROWS',values:[hdr,...rows]})
+    });
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'HTTP '+r.status);}
+    syncDot.textContent='✓ Synced';syncDot.className='sync-dot sync-ok';
+    toast2('✓ Synced '+tasks.length+' tasks','tok');
+  }catch(e){syncDot.textContent='✕ Failed';syncDot.className='sync-dot sync-err';toast2(e.message,'err');}
+  finally{syncBtn.disabled=false;setTimeout(()=>{syncDot.textContent='';syncDot.className='sync-dot';},4000);}
+});
+
+exportBtn.addEventListener('click',()=>{
+  if(!tasks.length){toast2('No tasks to export','inf');return;}
+  const hdr=['Status','Title','Assignee','Due Date','Priority','Category'];
+  const rows=tasks.map(t=>[t.status,t.title,t.assignee,t.dueDate,t.priority,t.category]);
+  const csv=[hdr,...rows].map(r=>r.map(v=>'"'+(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='tasks-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  toast2('CSV downloaded','tok');
+});
+
+function saveTasks(){localStorage.setItem('tf_tasks',JSON.stringify(tasks));}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function cap(s){return s?s[0].toUpperCase()+s.slice(1):'';}
+function prDot(p){return{critical:'●●●',high:'●●○',medium:'●○○',low:'○○○'}[p]||'●○○';}
+function toast2(msg,type='inf'){
+  toast.textContent=msg;toast.className='toast t'+type+' show';
+  clearTimeout(toast._t);toast._t=setTimeout(()=>toast.classList.remove('show'),3400);
+}
+</script>
 </body>
 </html>
