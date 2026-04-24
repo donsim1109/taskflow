@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskFlow — AI Task Manager</title>
+  <link rel="stylesheet" href="src/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">
+          <span class="logo-icon">⬡</span>
+          <span class="logo-text">TaskFlow</span>
+        </div>
+        <span class="header-tag">AI-Powered</span>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-ghost" id="syncBtn">
+          <span class="btn-icon">↑</span> Sync to Sheets
+        </button>
+        <div class="sync-status" id="syncStatus"></div>
+      </div>
+    </header>
+
+    <!-- Main layout -->
+    <main class="main">
+      <!-- Left panel: input -->
+      <section class="panel panel-input">
+        <div class="panel-header">
+          <h2>Capture Tasks</h2>
+          <p>Speak or type your tasks — AI will structure them automatically</p>
+        </div>
+
+        <!-- Mode tabs -->
+        <div class="mode-tabs">
+          <button class="tab active" data-tab="text">✎ Type</button>
+          <button class="tab" data-tab="voice">🎙 Speak</button>
+        </div>
+
+        <!-- Text input -->
+        <div class="input-area" id="textTab">
+          <textarea
+            id="taskInput"
+            class="task-textarea"
+            placeholder="e.g. Call John tomorrow about the budget proposal, high priority. Review the marketing deck by Friday. Fix login bug, assign to Sara, urgent."
+          ></textarea>
+          <div class="input-actions">
+            <button class="btn btn-primary" id="parseBtn">
+              <span>Parse Tasks</span>
+              <span class="btn-arrow">→</span>
+            </button>
+            <button class="btn btn-ghost" id="clearInputBtn">Clear</button>
+          </div>
+          <div class="examples">
+            <span class="examples-label">Try:</span>
+            <button class="example-chip" data-text="Call the client on Monday about the proposal, high priority, assign to Maria">Call client example</button>
+            <button class="example-chip" data-text="Fix the payment bug ASAP, critical priority. Update docs by end of week. Schedule team meeting for next Tuesday">Multi-task example</button>
+          </div>
+        </div>
+
+        <!-- Voice input -->
+        <div class="input-area hidden" id="voiceTab">
+          <div class="voice-visualizer" id="voiceVisualizer">
+            <div class="voice-rings">
+              <div class="ring ring-1"></div>
+              <div class="ring ring-2"></div>
+              <div class="ring ring-3"></div>
+            </div>
+            <button class="voice-btn" id="voiceBtn">
+              <span class="voice-icon">🎙</span>
+            </button>
+          </div>
+          <div class="voice-status" id="voiceStatus">Click the mic to start recording</div>
+          <div class="voice-transcript" id="voiceTranscript"></div>
+          <div class="input-actions" id="voiceActions" style="display:none;">
+            <button class="btn btn-primary" id="parseVoiceBtn">
+              <span>Parse Tasks</span>
+              <span class="btn-arrow">→</span>
+            </button>
+            <button class="btn btn-ghost" id="clearVoiceBtn">Clear</button>
+          </div>
+        </div>
+
+        <!-- Parsing status -->
+        <div class="parsing-status hidden" id="parsingStatus">
+          <div class="spinner"></div>
+          <span>AI is parsing your tasks…</span>
+        </div>
+      </section>
+
+      <!-- Right panel: table -->
+      <section class="panel panel-table">
+        <div class="panel-header">
+          <div>
+            <h2>Task Board</h2>
+            <p id="taskCount">0 tasks</p>
+          </div>
+          <div class="table-actions">
+            <button class="btn btn-ghost btn-sm" id="exportCsvBtn">↓ CSV</button>
+            <button class="btn btn-ghost btn-sm" id="clearAllBtn">✕ Clear All</button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+          <table class="task-table" id="taskTable">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Task</th>
+                <th>Assignee</th>
+                <th>Due Date</th>
+                <th>Priority</th>
+                <th>Category</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="taskBody">
+              <tr class="empty-row" id="emptyRow">
+                <td colspan="7">
+                  <div class="empty-state">
+                    <div class="empty-icon">⬡</div>
+                    <p>No tasks yet. Capture some above!</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Sheets config -->
+        <div class="sheets-config" id="sheetsConfig">
+          <div class="config-header" id="configToggle">
+            <span>⚙ Google Sheets Integration</span>
+            <span class="config-arrow">▾</span>
+          </div>
+          <div class="config-body hidden" id="configBody">
+            <div class="field-group">
+              <label>Spreadsheet ID</label>
+              <input type="text" id="sheetId" class="field-input" placeholder="1MA6djb09zkWRaEwLrMDJJbbh48jAKR0jsThn-pgxqg0" value="1MA6djb09zkWRaEwLrMDJJbbh48jAKR0jsThn-pgxqg0" />
+            </div>
+            <div class="field-group">
+              <label>Google API Key</label>
+              <input type="password" id="apiKey" class="field-input" placeholder="Your Google Sheets API key" />
+            </div>
+            <div class="field-group">
+              <label>Anthropic API Key</label>
+              <input type="password" id="anthropicKey" class="field-input" placeholder="sk-ant-..." />
+            </div>
+            <p class="config-note">Keys are stored locally in your browser and never sent to any server other than the respective APIs.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="src/app.js"></script>
+</body>
+</html>
